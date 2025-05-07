@@ -1,0 +1,73 @@
+# Deployment Configuration
+
+#annotations:
+#  reloader.stakater.com/auto: "true" # Annotation for the Stakater Reloader, which automatically restarts the pod if ConfigMaps or Secrets change.
+
+replicas: 2 # Defines the number of replicas for the deployment. In this case, two pods will be deployed.
+
+#securityContextEnabled: true # Add securityContext flag
+#securityContext: # Add default values for the securityContext
+#   runAsUser: 65534  # nobody user
+#   runAsGroup: 65534  # nogroup group
+
+image:
+  repository: nginx # Specifies the Docker image repository from an Azure Container Registry.
+  tag: latest
+
+container:
+  name: nginx # Name of the container in the pod.
+  port: 80 # Port on which the container will listen for incoming requests.
+
+resources:
+  limits:
+    cpu: "500m"     # Maximum CPU allocation for the container (500 milliCPU).
+    memory: "256Mi" # Maximum memory allocation for the container (256 MiB).
+  requests:
+    cpu: "200m"     # Minimum CPU allocation requested for the container (200 milliCPU).
+    memory: "128Mi" # Minimum memory allocation requested for the container (128 MiB).
+
+
+
+#
+# ConfigMap Data
+configMap:
+  data:
+    ASPNETCORE_ENVIRONMENT: "Development" # Environment variable for the .NET application, indicating the environment is "Development".
+    
+
+
+# Secret Data
+secrets:
+  data:
+    OracleDbConnectionString: "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=172.10.0.9)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=neodev)));User Id=lifestyle_hub_app_test;Password=lifestyle_hub_123;"
+    AuditLogDbConnectionString: "Data Source=(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL=TCP)(HOST=172.10.0.90)(PORT=1521)))(CONNECT_DATA=(SERVICE_NAME=neolsaddev)));User Id=neoaddev_test;Password=neo123;"
+    CordysUsername: "NeoMobileDVGen"    
+
+# Service Configuration
+service:
+  type: ClusterIP  # Defines the type of Kubernetes service. ClusterIP exposes the service internally within the cluster.
+  port: 80         # Port that the service will expose externally (within the cluster in this case).
+  targetPort: 80 # The port on the container to which the service will route traffic.
+
+# Ingress Configuration
+ingress:
+  enabled: true  # Enables the creation of an Ingress resource to manage external access to the service.
+  className: "nginx"  # Specifies the Ingress class for the controller, in this case NGINX (e.g., it could be Traefik or another controller).
+
+  # Ingress annotations (can be used to configure specific ingress controller features)
+  annotations: 
+    nginx.ingress.kubernetes.io/rewrite-target: "/$2"  # Example annotation for NGINX Ingress to rewrite URLs. Uncomment if needed.
+
+  hosts:
+    - host:   # The hostname for accessing the application via Ingress.
+      paths:
+        - path: /nginx(/|$)(.*)       # The root path for the frontend application.
+          pathType: Prefix
+          serviceName: nginx-service   # The service that handles requests to the root path.
+          servicePort: 80  # The port that the service exposes.
+
+  # TLS configuration for secure HTTPS access
+  tls: 
+    - secretName: argocd-tls  # TLS secret used to store SSL certificates for securing the connection.
+      hosts: 
+        -  argocd.local # The hostname associated with the SSL certificate for HTTPS.
