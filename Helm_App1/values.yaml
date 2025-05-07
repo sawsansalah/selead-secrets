@@ -51,7 +51,7 @@ service:
 
 # Ingress Configuration
 ingress:
-  enabled: true  # Enables the creation of an Ingress resource to manage external access to the service.
+  enabled: false # Enables the creation of an Ingress resource to manage external access to the service.
   className: "nginx"  # Specifies the Ingress class for the controller, in this case NGINX (e.g., it could be Traefik or another controller).
 
   # Ingress annotations (can be used to configure specific ingress controller features)
