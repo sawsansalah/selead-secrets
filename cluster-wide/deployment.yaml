@@ -20,6 +20,6 @@ spec:
         - name: APIKEY
           valueFrom:
             secretKeyRef:
-              name: appsecret
+              name: appsecret-new 
               key: apikey
       restartPolicy: Always
